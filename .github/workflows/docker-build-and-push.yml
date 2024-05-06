@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - master
 
 jobs:
   build-and-push:
@@ -26,4 +27,4 @@ jobs:
         context: .
         file: ./Dockerfile
         push: true
-        tags: ghcr.io/g1ibby/ollama-auth:latest
+        tags: ghcr.io/monotykamary/ollama-auth:latest
