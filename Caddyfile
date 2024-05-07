@@ -1,6 +1,5 @@
 :80 {
-  basicauth {
-    {$CADDY_USERNAME} {$CADDY_PASSWORD_HASH}
-  }
+  @unauthorized not header Authorization "Bearer {$CADDY_API_KEY}"
+  respond @unauthorized "401 Unauthorized"
   reverse_proxy localhost:11434
 }

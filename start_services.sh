@@ -1,14 +1,5 @@
 #!/bin/bash
 
-# Ensure required environment variables are set
-if [ -z "$CADDY_USERNAME" ] || [ -z "$CADDY_PASSWORD" ]; then
-    echo "CADDY_USERNAME or CADDY_PASSWORD is not set. Exiting."
-    exit 1
-fi
-
-# Generate the password hash without an interactive prompt
-export CADDY_PASSWORD_HASH=$(echo "$CADDY_PASSWORD" | caddy hash-password)
-
 # Start ollama in the background
 ollama serve &
 OLLAMA_PID=$!
