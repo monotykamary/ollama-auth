@@ -1,4 +1,4 @@
-FROM ollama/ollama:0.1.39
+FROM ollama/ollama:0.1.40
 
 # Update and install wget to download caddy
 RUN apt-get update && apt-get install -y wget
