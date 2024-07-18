@@ -1,0 +1,58 @@
+name: Check Ollama Version, Update Dockerfile, and Create Release
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Run daily at midnight UTC
+  workflow_dispatch:  # Allow manual triggers
+
+jobs:
+  check-update-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Get latest Ollama release
+        id: ollama_release
+        run: |
+          LATEST_VERSION=$(curl -s https://api.github.com/repos/ollama/ollama/releases/latest | jq -r .tag_name)
+          echo "LATEST_VERSION=${LATEST_VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Check current version in Dockerfile
+        id: current_version
+        run: |
+          CURRENT_VERSION=$(grep 'FROM ollama/ollama:' Dockerfile | cut -d: -f2)
+          echo "CURRENT_VERSION=${CURRENT_VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Update Dockerfile if version changed
+        if: steps.ollama_release.outputs.LATEST_VERSION != steps.current_version.outputs.CURRENT_VERSION
+        run: |
+          sed -i 's|FROM ollama/ollama:.*|FROM ollama/ollama:${{ steps.ollama_release.outputs.LATEST_VERSION }}|' Dockerfile
+
+      - name: Commit changes
+        if: steps.ollama_release.outputs.LATEST_VERSION != steps.current_version.outputs.CURRENT_VERSION
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git commit -am "chore: bump ollama to ${{ steps.ollama_release.outputs.LATEST_VERSION }}"
+
+      - name: Push changes
+        if: steps.ollama_release.outputs.LATEST_VERSION != steps.current_version.outputs.CURRENT_VERSION
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
+
+      - name: Create Release
+        if: steps.ollama_release.outputs.LATEST_VERSION != steps.current_version.outputs.CURRENT_VERSION
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.ollama_release.outputs.LATEST_VERSION }}
+          release_name: Release ${{ steps.ollama_release.outputs.LATEST_VERSION }}
+          body: |
+            Automatically updated to Ollama version ${{ steps.ollama_release.outputs.LATEST_VERSION }}.
+          draft: false
+          prerelease: false
