@@ -1,8 +1,6 @@
-Here's an updated README that includes information about the new code and environment variables, with backticks removed:
-
 # Docker Image for Ollama Service with Basic Auth using Caddy Server
 
-This project provides a Docker image that runs the Ollama service with basic authentication using the Caddy server. The image is designed to be easy to use, with a simple command to get started. The basic authentication credentials can be set using environment variables when running the Docker container.
+This project provides a Docker image that runs the Ollama service with basic authentication using the Caddy server, specialized for Fly.io. The image is designed to be easy to use, with a simple command to get started. The basic authentication credentials can be set using environment variables when running the Docker container.
 
 ## Usage:
 
@@ -18,10 +16,10 @@ This will start a new Docker container using the ollama-auth image, and map port
 
 The following environment variables can be used to configure the service:
 
-- CADDY_API_KEY: The API key for basic authentication (required)
-- DEFAULT_TIMEOUT: Default timeout in seconds for low traffic periods (default: 15)
-- MAX_TIMEOUT: Maximum timeout in seconds for high traffic periods (default: 120)
-- CONNECTION_THRESHOLD: Threshold for high traffic determination (default: 2)
+- `CADDY_API_KEY`: The API key for basic authentication (required)
+- `DEFAULT_TIMEOUT`: Default timeout in seconds for low traffic periods (default: 15)
+- `MAX_TIMEOUT`: Maximum timeout in seconds for high traffic periods (default: 120)
+- `CONNECTION_THRESHOLD`: Threshold for high traffic determination (default: 2)
 
 ## Building the Docker Image:
 
