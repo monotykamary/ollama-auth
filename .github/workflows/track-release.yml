@@ -43,6 +43,12 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: ${{ github.ref }}
 
+      - name: Create Git Tag
+        if: steps.ollama_release.outputs.LATEST_VERSION != steps.current_version.outputs.CURRENT_VERSION
+        run: |
+          git tag ${{ steps.ollama_release.outputs.LATEST_VERSION }}
+          git push origin ${{ steps.ollama_release.outputs.LATEST_VERSION }}
+
       - name: Create Release
         if: steps.ollama_release.outputs.LATEST_VERSION != steps.current_version.outputs.CURRENT_VERSION
         id: create_release
@@ -51,7 +57,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ steps.ollama_release.outputs.LATEST_VERSION }}
-          release_name: Release ${{ steps.ollama_release.outputs.LATEST_VERSION }}
+          release_name: ${{ steps.ollama_release.outputs.LATEST_VERSION }}
           body: |
             Automatically updated to Ollama version ${{ steps.ollama_release.outputs.LATEST_VERSION }}.
           draft: false
