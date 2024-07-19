@@ -1,7 +1,7 @@
 FROM ollama/ollama:0.2.2
 
-# Update and install wget to download caddy
-RUN apt-get update && apt-get install -y wget
+# Update and install wget to download caddy, and net-tools for netstat
+RUN apt-get update && apt-get install -y wget net-tools
 
 # Download and install caddy
 RUN wget --no-check-certificate https://github.com/caddyserver/caddy/releases/download/v2.7.6/caddy_2.7.6_linux_amd64.tar.gz \
