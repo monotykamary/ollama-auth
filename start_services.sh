@@ -23,7 +23,7 @@ stop_services() {
 }
 
 check_connections() {
-    netstat -tn | grep :11434 | grep ESTABLISHED | wc -l
+    netstat -tn | grep :80 | grep ESTABLISHED | wc -l
 }
 
 INACTIVITY_TIMEOUT=5
@@ -43,9 +43,8 @@ while true; do
         echo "No activity for $INACTIVITY_TIMEOUT seconds. Attempting to signal machine shutdown..."
         stop_services
         
-        # Attempt to signal Fly.io to shut down the machine
         echo "Exiting container with special exit code to signal shutdown"
-        exit 78  # Using exit code 78 as a potential signal
+        exit 78
     fi
     
     sleep 1
