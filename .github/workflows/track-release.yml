@@ -40,14 +40,16 @@ jobs:
         if: steps.ollama_release.outputs.LATEST_VERSION != steps.current_version.outputs.CURRENT_VERSION
         uses: ad-m/github-push-action@master
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.PAT_TOKEN }}
           branch: ${{ github.ref }}
 
       - name: Create Git Tag
         if: steps.ollama_release.outputs.LATEST_VERSION != steps.current_version.outputs.CURRENT_VERSION
         run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
           git tag ${{ steps.ollama_release.outputs.LATEST_VERSION }}
-          git push origin ${{ steps.ollama_release.outputs.LATEST_VERSION }}
+          git push https://${{ secrets.PAT_TOKEN }}@github.com/${{ github.repository }}.git ${{ steps.ollama_release.outputs.LATEST_VERSION }}
 
       - name: Create Release
         if: steps.ollama_release.outputs.LATEST_VERSION != steps.current_version.outputs.CURRENT_VERSION
