@@ -50,7 +50,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v${{ steps.ollama_release.outputs.LATEST_VERSION }}
+          tag_name: ${{ steps.ollama_release.outputs.LATEST_VERSION }}
           release_name: Release ${{ steps.ollama_release.outputs.LATEST_VERSION }}
           body: |
             Automatically updated to Ollama version ${{ steps.ollama_release.outputs.LATEST_VERSION }}.
