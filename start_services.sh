@@ -26,30 +26,27 @@ check_connections() {
     netstat -tn | grep :11434 | grep ESTABLISHED | wc -l
 }
 
-INACTIVITY_TIMEOUT=60
+INACTIVITY_TIMEOUT=5
 LAST_CONNECTION_TIME=$(date +%s)
-SERVICES_RUNNING=false
 
 trap "stop_services; exit 0" SIGTERM SIGINT
 
+start_services
+
 while true; do
     CURRENT_TIME=$(date +%s)
+    CURRENT_CONNECTIONS=$(check_connections)
     
-    if [ "$SERVICES_RUNNING" = false ]; then
-        start_services
-        SERVICES_RUNNING=true
+    if [ $CURRENT_CONNECTIONS -gt 0 ]; then
         LAST_CONNECTION_TIME=$CURRENT_TIME
-    else
-        CURRENT_CONNECTIONS=$(check_connections)
+    elif [ $((CURRENT_TIME - LAST_CONNECTION_TIME)) -ge $INACTIVITY_TIMEOUT ]; then
+        echo "No activity for $INACTIVITY_TIMEOUT seconds. Attempting to signal machine shutdown..."
+        stop_services
         
-        if [ $CURRENT_CONNECTIONS -gt 0 ]; then
-            LAST_CONNECTION_TIME=$CURRENT_TIME
-        elif [ $((CURRENT_TIME - LAST_CONNECTION_TIME)) -ge $INACTIVITY_TIMEOUT ]; then
-            echo "No activity for $INACTIVITY_TIMEOUT seconds. Performing soft shutdown..."
-            stop_services
-            SERVICES_RUNNING=false
-        fi
+        # Attempt to signal Fly.io to shut down the machine
+        echo "Exiting container with special exit code to signal shutdown"
+        exit 78  # Using exit code 78 as a potential signal
     fi
     
-    sleep 10
+    sleep 1
 done
