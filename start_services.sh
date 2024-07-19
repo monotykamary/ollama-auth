@@ -1,42 +1,55 @@
 #!/bin/bash
 
-# Start ollama in the background
-ollama serve &
-OLLAMA_PID=$!
-# Start caddy in the background
-caddy run --config /etc/caddy/Caddyfile &
-CADDY_PID=$!
-
-# Function to check process status
-check_process() {
-    wait $1
-    STATUS=$?
-    if [ $STATUS -ne 0 ]; then
-        echo "Process $2 ($1) has exited with status $STATUS"
-        exit $STATUS
-    fi
+start_services() {
+    echo "Starting services..."
+    ollama serve &
+    OLLAMA_PID=$!
+    caddy run --config /etc/caddy/Caddyfile &
+    CADDY_PID=$!
 }
 
-# Handle shutdown signals
-trap "kill $OLLAMA_PID $CADDY_PID; exit 0" SIGTERM SIGINT
+stop_services() {
+    echo "Stopping services..."
+    if [ ! -z "$OLLAMA_PID" ]; then
+        kill $OLLAMA_PID
+        wait $OLLAMA_PID 2>/dev/null
+    fi
+    if [ ! -z "$CADDY_PID" ]; then
+        kill $CADDY_PID
+        wait $CADDY_PID 2>/dev/null
+    fi
+    OLLAMA_PID=""
+    CADDY_PID=""
+}
 
-# Wait for both services to start and monitor them
+check_connections() {
+    netstat -tn | grep :11434 | grep ESTABLISHED | wc -l
+}
+
+INACTIVITY_TIMEOUT=60
+LAST_CONNECTION_TIME=$(date +%s)
+SERVICES_RUNNING=false
+
+trap "stop_services; exit 0" SIGTERM SIGINT
+
 while true; do
-    if ! ps -p $OLLAMA_PID > /dev/null; then
-        echo "Ollama service is not running, checking for exit status"
-        check_process $OLLAMA_PID "Ollama"
-        # Only restart if check_process hasn't exited the script
-        echo "Starting Ollama now"
-        ollama serve &
-        OLLAMA_PID=$!
+    CURRENT_TIME=$(date +%s)
+    
+    if [ "$SERVICES_RUNNING" = false ]; then
+        start_services
+        SERVICES_RUNNING=true
+        LAST_CONNECTION_TIME=$CURRENT_TIME
+    else
+        CURRENT_CONNECTIONS=$(check_connections)
+        
+        if [ $CURRENT_CONNECTIONS -gt 0 ]; then
+            LAST_CONNECTION_TIME=$CURRENT_TIME
+        elif [ $((CURRENT_TIME - LAST_CONNECTION_TIME)) -ge $INACTIVITY_TIMEOUT ]; then
+            echo "No activity for $INACTIVITY_TIMEOUT seconds. Performing soft shutdown..."
+            stop_services
+            SERVICES_RUNNING=false
+        fi
     fi
-    if ! ps -p $CADDY_PID > /dev/null; then
-        echo "Caddy service is not running, checking for exit status"
-        check_process $CADDY_PID "Caddy"
-        # Only restart if check_process hasn't exited the script
-        echo "Starting Caddy now"
-        caddy run --config /etc/caddy/Caddyfile &
-        CADDY_PID=$!
-    fi
-    sleep 1
+    
+    sleep 10
 done
