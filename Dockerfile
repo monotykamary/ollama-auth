@@ -1,4 +1,4 @@
-FROM ollama/ollama:0.3.4
+FROM ollama/ollama:0.3.5
 
 # Update and install wget to download caddy, and net-tools for netstat
 RUN apt-get update && apt-get install -y wget net-tools
